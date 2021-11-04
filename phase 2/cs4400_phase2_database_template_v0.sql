@@ -194,7 +194,7 @@ insert into customer_rates_owner values
 DROP TABLE IF EXISTS airline;
 CREATE TABLE airline (
 	name varchar(50),
-    rating decimal(1,0) NOT NULL,
+    rating decimal(2,1) NOT NULL,
     
     primary key (name)
 ) ENGINE=InnoDB;
