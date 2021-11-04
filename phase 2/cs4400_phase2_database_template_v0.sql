@@ -101,7 +101,6 @@ insert into client values
 ('boblee15@gmail.com','404-678-5555');
 
 
-
 DROP TABLE IF EXISTS owner;
 CREATE TABLE owner (
 	email varchar(50),
@@ -123,6 +122,7 @@ insert into owner values
 ('cbing10@gmail.com'),
 ('hwmit@gmail.com');
 
+
 DROP TABLE IF EXISTS customer;
 CREATE TABLE customer (
 	email varchar(50),
@@ -135,26 +135,20 @@ CREATE TABLE customer (
     constraint customer_fk_4 foreign key (email) references client (email)
 ) ENGINE=InnoDB;
 insert into customer values
-('scooper3@gmail.com',6518555974461660,'2024-2-29',551,''),
-('mgeller5@gmail.com',2328567043101960,'2024-3-31',644,''),
-('cbing10@gmail.com',8387952398279290,'2023-2-28',201,''),
-('hwmit@gmail.com',6558859698525290,'2023-4-30',102,''),
-('swilson@gmail.com',9383321241981830,'2022-8-31',455,''),
-('aray@tiktok.com',3110266979495600,'2022-8-31',744,''),
-('cdemilio@tiktok.com',2272355540784740,'2025-02-28',606,''),
-('bshelton@gmail.com',9276763978834270,'2023-09-30',862,''),
-('lbryan@gmail.com',4652372688643790,'2023-05-31',258,''),
-('tswift@gmail.com',5478842044367470,'2024-12-31',857,''),
-('jseinfeld@gmail.com',3616897712963370,'2022-06-30',295,''),
-('maddiesmith@gmail.com',9954569863556950,'2022-07-31',794,''),
-('johnthomas@gmail.com',7580327437245350,'2025-10-31',269,''),
-('boblee15@gmail.com',7907351371614240,'2025-11-30',858,'');
-
-
-
-
-
-
+('scooper3@gmail.com',6518555974461660,'2024-2-01',551,''),
+('mgeller5@gmail.com',2328567043101960,'2024-3-01',644,''),
+('cbing10@gmail.com',8387952398279290,'2023-2-01',201,''),
+('hwmit@gmail.com',6558859698525290,'2023-4-01',102,''),
+('swilson@gmail.com',9383321241981830,'2022-8-01',455,''),
+('aray@tiktok.com',3110266979495600,'2022-8-01',744,''),
+('cdemilio@tiktok.com',2272355540784740,'2025-02-01',606,''),
+('bshelton@gmail.com',9276763978834270,'2023-09-01',862,''),
+('lbryan@gmail.com',4652372688643790,'2023-05-01',258,''),
+('tswift@gmail.com',5478842044367470,'2024-12-01',857,''),
+('jseinfeld@gmail.com',3616897712963370,'2022-06-01',295,''),
+('maddiesmith@gmail.com',9954569863556950,'2022-07-01',794,''),
+('johnthomas@gmail.com',7580327437245350,'2025-10-01',269,''),
+('boblee15@gmail.com',7907351371614240,'2025-11-01',858,'');
 
 
 DROP TABLE IF EXISTS owner_rates_customer;
@@ -197,7 +191,6 @@ insert into customer_rates_owner values
 ('hwmit@gmail.com','maddiesmith@gmail.com',5);
 
 
-
 DROP TABLE IF EXISTS airline;
 CREATE TABLE airline (
 	name varchar(50),
@@ -214,7 +207,6 @@ insert into airline values
 ('Spirit Airlines',3.3),
 ('WestJet',3.9),
 ('Interjet',3.7);
-
 
 
 DROP TABLE IF EXISTS airport;
@@ -239,7 +231,6 @@ insert into airport values
 ('ORD','O''Hare International Airport','CST','10000 W O''Hare Ave','Chicago','IL',60666),
 ('MIA','Miami International Airport','EST','2100 NW 42nd Ave','Miami','FL',33126),
 ('DFW','Dallas International Airport','CST','2400 Aviation DR','Dallas','TX',75261);
-
 
 
 DROP TABLE IF EXISTS attractions;
@@ -444,10 +435,6 @@ insert into reserve values
 ('hwmit@gmail.com','ellie2@gmail.com','Family Beach House','2021-10-18','2021-10-28',5);
 
 
-
-
-
-
 DROP TABLE IF EXISTS book;
 CREATE TABLE book (
 	customer_email varchar(50),
@@ -469,7 +456,6 @@ insert into book values
 ('maddiesmith@gmail.com','Interjet',8,2),
 ('cbing10@gmail.com','Southwest Airlines',2,2),
 ('hwmit@gmail.com','Southwest Airlines',2,5);
-
 
 
 DROP TABLE IF EXISTS is_close_to;
@@ -501,4 +487,3 @@ insert into is_close_to values
 ('MIA','ellie2@gmail.com','Family Beach House',19),
 ('DFW','mscott22@gmail.com','Texas Roadhouse',8),
 ('DFW','mscott22@gmail.com','Texas Longhorns House',17);
-
