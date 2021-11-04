@@ -263,7 +263,7 @@ insert into attractions values
 DROP TABLE IF EXISTS flight;
 CREATE TABLE flight (
 	airline_name varchar(50),
-    flight_number char(5),
+    flight_number decimal(5,0),
     departure_time char(8) NOT NULL,
     arrival_time char(8) NOT NULL,
     cost_per_seat decimal(5,0) NOT NULL,
@@ -439,7 +439,7 @@ DROP TABLE IF EXISTS book;
 CREATE TABLE book (
 	customer_email varchar(50),
     flight_airline_name varchar(50),
-    flight_number char(5),
+    flight_number decimal(5,0),
     number_of_seats decimal(4,0) NOT NULL,
     
     primary key (customer_email, flight_airline_name, flight_number),
