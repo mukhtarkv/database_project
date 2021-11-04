@@ -126,7 +126,7 @@ insert into owner values
 DROP TABLE IF EXISTS customer;
 CREATE TABLE customer (
 	email varchar(50),
-    credit_card_number decimal(16,0) NOT NULL UNIQUE,
+    credit_card_number char(19) NOT NULL UNIQUE,
     expiration_date date NOT NULL,
     cvv decimal(3,0) NOT NULL,
     current_location varchar(50) NOT NULL DEFAULT "",
@@ -135,20 +135,20 @@ CREATE TABLE customer (
     constraint customer_fk_4 foreign key (email) references client (email)
 ) ENGINE=InnoDB;
 insert into customer values
-('scooper3@gmail.com',6518555974461660,'2024-2-01',551,''),
-('mgeller5@gmail.com',2328567043101960,'2024-3-01',644,''),
-('cbing10@gmail.com',8387952398279290,'2023-2-01',201,''),
-('hwmit@gmail.com',6558859698525290,'2023-4-01',102,''),
-('swilson@gmail.com',9383321241981830,'2022-8-01',455,''),
-('aray@tiktok.com',3110266979495600,'2022-8-01',744,''),
-('cdemilio@tiktok.com',2272355540784740,'2025-02-01',606,''),
-('bshelton@gmail.com',9276763978834270,'2023-09-01',862,''),
-('lbryan@gmail.com',4652372688643790,'2023-05-01',258,''),
-('tswift@gmail.com',5478842044367470,'2024-12-01',857,''),
-('jseinfeld@gmail.com',3616897712963370,'2022-06-01',295,''),
-('maddiesmith@gmail.com',9954569863556950,'2022-07-01',794,''),
-('johnthomas@gmail.com',7580327437245350,'2025-10-01',269,''),
-('boblee15@gmail.com',7907351371614240,'2025-11-01',858,'');
+('scooper3@gmail.com','6518 5559 7446 1663','2024-2-01',551,''),
+('mgeller5@gmail.com','2328 5670 4310 1965','2024-3-01',644,''),
+('cbing10@gmail.com','8387 9523 9827 9291','2023-2-01',201,''),
+('hwmit@gmail.com','6558 8596 9852 5299','2023-4-01',102,''),
+('swilson@gmail.com','9383 3212 4198 1836','2022-8-01',455,''),
+('aray@tiktok.com','3110 2669 7949 5605','2022-8-01',744,''),
+('cdemilio@tiktok.com','2272 3555 4078 4744','2025-02-01',606,''),
+('bshelton@gmail.com','9276 7639 7883 4273','2023-09-01',862,''),
+('lbryan@gmail.com','4652 3726 8864 3798','2023-05-01',258,''),
+('tswift@gmail.com','5478 8420 4436 7471','2024-12-01',857,''),
+('jseinfeld@gmail.com','3616 8977 1296 3372','2022-06-01',295,''),
+('maddiesmith@gmail.com','9954 5698 6355 6952','2022-07-01',794,''),
+('johnthomas@gmail.com','7580 3274 3724 5356','2025-10-01',269,''),
+('boblee15@gmail.com','7907 3513 7161 4248','2025-11-01',858,'');
 
 
 DROP TABLE IF EXISTS owner_rates_customer;
