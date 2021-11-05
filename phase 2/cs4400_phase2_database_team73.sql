@@ -4,7 +4,7 @@
 -- Michael Coppeta (mcoppeta3)
 -- Mukhtar Kussaiynbekov (mkussaiy3)
 -- Jingrui Zhang (jzhang3134)
--- Team Member Name (GT username)
+-- Jon Green (?)
 
 -- Directions:
 -- Please follow all instructions for Phase II as listed on Canvas.
