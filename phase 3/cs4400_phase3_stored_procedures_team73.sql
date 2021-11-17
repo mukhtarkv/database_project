@@ -329,7 +329,7 @@ create function get_total_flights (airport_id CHAR(3), is_destination BOOLEAN)
 returns integer deterministic
 begin
 return (select COUNT(*)
-from Airport join Flight on (is_destination and Airport_Id = To_Airport) or Airport_Id = From_Airport
+from Airport join Flight on (is_destination and Airport_Id = To_Airport) or (not is_destination and Airport_Id = From_Airport)
 where Airport_Id = airport_id);
 end //
 delimiter ;
