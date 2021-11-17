@@ -330,7 +330,7 @@ returns integer deterministic
 begin
 return (select COUNT(*)
 from Airport join Flight on (is_destination and Airport_Id = To_Airport) or (not is_destination and Airport_Id = From_Airport)
-where Airport_Id = airport_id);
+where Airport.Airport_Id = airport_id);
 end //
 delimiter ;
 
@@ -341,7 +341,7 @@ returns double precision deterministic
 begin
 return (select AVG(Cost)
 from Airport join Flight on Airport_Id = From_Airport
-where Airport_Id = airport_id);
+where Airport.Airport_Id = airport_id);
 end //
 delimiter ;
 
@@ -372,6 +372,17 @@ from Airline natural join Flight
 group by Airline_Name;
 
 
+drop function if exists get_total_seats_purchased;
+delimiter //
+create function get_total_seats_purchased (email VARCHAR(50))
+returns double precision deterministic
+begin
+return (select SUM(Num_Seats)
+from Customer left join Book on Customer.Email = Book.Customer and not Was_Cancelled
+where Customer.Email = email);
+end //
+delimiter ;
+
 -- ID: 8a
 -- Name: view_customers
 create or replace view view_customers (
@@ -381,9 +392,13 @@ create or replace view view_customers (
     is_owner, 
     total_seats_purchased
 ) as
--- TODO: replace this select query with your solution
--- view customers
-select 'col1', 'col2', 'col3', 'col4', 'col5' from customer;
+select CONCAT(First_Name, " ", Last_Name),
+COALESCE(AVG(Score), 0), Location,
+Owners.Email is not NULL,
+COALESCE(get_total_seats_purchased(Customer.Email), 0)
+from Customer natural join Accounts left join Owners on Customer.Email = Owners.Email
+left join Owners_Rate_Customers on Customer.Email = Customer
+group by Customer.Email;
 
 
 -- ID: 8b
