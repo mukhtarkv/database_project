@@ -1,10 +1,10 @@
 -- CS4400: Introduction to Database Systems (Fall 2021)
 -- Phase III: Stored Procedures & Views [v0] Tuesday, November 9, 2021 @ 12:00am EDT
--- Team __
--- Team Member Name (GT username)
--- Team Member Name (GT username)
--- Team Member Name (GT username)
--- Team Member Name (GT username)
+-- Team 73
+-- Michael Coppeta (mcoppeta3)
+-- Mukhtar Kussaiynbekov (mkussaiy3)
+-- Jingrui Zhang (jzhang3134)
+-- Jon Green (?)
 -- Directions:
 -- Please follow all instructions for Phase III as listed on Canvas.
 -- Fill in the team number and names and GT usernames for all members above.
@@ -322,6 +322,28 @@ sp_main: begin
 end //
 delimiter ;
 
+-- Helper methods
+drop function if exists get_total_flights;
+delimiter //
+create function get_total_flights (airport_id CHAR(3), is_destination BOOLEAN)
+returns integer deterministic
+begin
+return (select COUNT(*)
+from Airport join Flight on (is_destination and Airport_Id = To_Airport) or Airport_Id = From_Airport
+where Airport_Id = airport_id);
+end //
+delimiter ;
+
+drop function if exists get_average_departing_cost;
+delimiter //
+create function get_average_departing_cost (airport_id CHAR(3))
+returns double precision deterministic
+begin
+return (select AVG(Cost)
+from Airport join Flight on Airport_Id = From_Airport
+where Airport_Id = airport_id);
+end //
+delimiter ;
 
 -- ID: 7a
 -- Name: view_airports
@@ -332,9 +354,9 @@ create or replace view view_airports (
     total_arriving_flights, 
     total_departing_flights, 
     avg_departing_flight_cost
-) as
--- TODO: replace this select query with your solution    
-select 'col1', 'col2', 'col3', 'col4', 'col5', 'col6' from airport;
+) as   
+select Airport_Id, Airport_Name, Time_Zone, get_total_flights(Airport_Id, TRUE), get_total_flights(Airport_Id, FALSE), get_average_departing_cost(Airport_Id)
+from Airport;
 
 -- ID: 7b
 -- Name: view_airlines
