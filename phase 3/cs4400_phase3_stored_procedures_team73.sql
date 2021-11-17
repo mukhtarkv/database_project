@@ -358,6 +358,7 @@ create or replace view view_airports (
 select Airport_Id, Airport_Name, Time_Zone, get_total_flights(Airport_Id, TRUE), get_total_flights(Airport_Id, FALSE), get_average_departing_cost(Airport_Id)
 from Airport;
 
+
 -- ID: 7b
 -- Name: view_airlines
 create or replace view view_airlines (
@@ -366,8 +367,9 @@ create or replace view view_airlines (
     total_flights, 
     min_flight_cost
 ) as
--- TODO: replace this select query with your solution
-select 'col1', 'col2', 'col3', 'col4' from airline;
+select Airline_Name, Rating, COUNT(Flight_Num), MIN(Cost)
+from Airline natural join Flight
+group by Airline_Name;
 
 
 -- ID: 8a
