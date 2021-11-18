@@ -372,14 +372,15 @@ from Airline natural join Flight
 group by Airline_Name;
 
 
+-- Helper method
 drop function if exists get_total_seats_purchased;
 delimiter //
 create function get_total_seats_purchased (email VARCHAR(50))
 returns double precision deterministic
 begin
-return (select SUM(Num_Seats)
+return COALESCE((select SUM(Num_Seats)
 from Customer left join Book on Customer.Email = Book.Customer and not Was_Cancelled
-where Customer.Email = email);
+where Customer.Email = email), 0);
 end //
 delimiter ;
 
@@ -395,11 +396,33 @@ create or replace view view_customers (
 select CONCAT(First_Name, " ", Last_Name),
 COALESCE(AVG(Score), 0), Location,
 Owners.Email is not NULL,
-COALESCE(get_total_seats_purchased(Customer.Email), 0)
+get_total_seats_purchased(Customer.Email)
 from Customer natural join Accounts left join Owners on Customer.Email = Owners.Email
 left join Owners_Rate_Customers on Customer.Email = Customer
 group by Customer.Email;
 
+
+-- Helper methods
+drop function if exists get_num_properties_owned;
+delimiter //
+create function get_num_properties_owned (email VARCHAR(50))
+returns double precision deterministic
+begin
+return COALESCE((select COUNT(*) from Property
+where Property.Owner_Email = email), 0);
+end //
+delimiter ;
+
+drop function if exists get_avg_property_rating;
+delimiter //
+create function get_avg_property_rating (email VARCHAR(50))
+returns double precision deterministic
+begin
+return COALESCE((select AVG(Score)
+from Property natural join Review
+where Property.Owner_Email = email), 0);
+end //
+delimiter ;
 
 -- ID: 8b
 -- Name: view_owners
@@ -409,8 +432,13 @@ create or replace view view_owners (
     num_properties_owned, 
     avg_property_rating
 ) as
--- TODO: replace this select query with your solution
-select 'col1', 'col2', 'col3', 'col4' from owners;
+select CONCAT(First_Name, " ", Last_Name),
+COALESCE(AVG(Score), 0),
+get_num_properties_owned(Email),
+get_avg_property_rating(Email)
+from Owners natural join Accounts
+left join Owners_Rate_Customers on Email = Owner_Email
+group by Email;
 
 
 -- ID: 9a
