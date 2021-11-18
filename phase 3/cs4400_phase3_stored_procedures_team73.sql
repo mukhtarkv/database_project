@@ -258,8 +258,11 @@ create or replace view view_properties (
     capacity, 
     cost_per_night
 ) as
--- TODO: replace this select query with your solution
-select 'col1', 'col2', 'col3', 'col4', 'col5', 'col6' from property;
+select Property_Name, AVG(Score), Descr,
+CONCAT(Street, ", ", City, ", ", State, ", ", Zip),
+Capacity, Cost
+from Property natural join Review
+group by Property_Name, Street, City, State, Zip;
 
 
 -- ID: 5e
