@@ -154,13 +154,18 @@ delimiter ;
 drop function if exists get_total_spent_on_flight;
 delimiter //
 create function get_total_spent_on_flight (flight_num CHAR(5), airline_name VARCHAR(50))
-returns double precision deterministic
+returns double deterministic
 begin
-return coalesce((select SUM(Num_Seats * Cost *
+declare total_spent double;
+
+select SUM(Num_Seats * Cost *
 (case Was_Cancelled when true then 0.2 else 1.0 end))
+into total_spent
 from Book natural join Flight
 where Flight.Flight_Num = flight_num
-and Flight.Airline_Name = airline_name), 0.0);
+and Flight.Airline_Name = airline_name;
+
+return coalesce(total_spent, 0.0);
 end //
 delimiter ;
 
@@ -287,11 +292,11 @@ create or replace view view_properties (
     capacity, 
     cost_per_night
 ) as
-select Property_Name, AVG(Score), Descr,
+select Property.Property_Name, AVG(Score), Descr,
 CONCAT(Street, ", ", City, ", ", State, ", ", Zip),
 Capacity, Cost
-from Property natural join Review
-group by Property_Name, Street, City, State, Zip;
+from Property left join Review on Property.Property_Name = Review.Property_Name and Property.Owner_Email = Review.Owner_Email
+group by Property.Property_Name, Street, City, State, Zip;
 
 
 -- ID: 5e
@@ -369,7 +374,7 @@ delimiter ;
 drop function if exists get_average_departing_cost;
 delimiter //
 create function get_average_departing_cost (airport_id CHAR(3))
-returns double precision deterministic
+returns double deterministic
 begin
 return (select AVG(Cost)
 from Airport join Flight on Airport_Id = From_Airport
@@ -387,7 +392,10 @@ create or replace view view_airports (
     total_departing_flights, 
     avg_departing_flight_cost
 ) as   
-select Airport_Id, Airport_Name, Time_Zone, get_total_flights(Airport_Id, TRUE), get_total_flights(Airport_Id, FALSE), get_average_departing_cost(Airport_Id)
+select Airport_Id, Airport_Name, Time_Zone,
+get_total_flights(Airport_Id, TRUE),
+get_total_flights(Airport_Id, FALSE),
+get_average_departing_cost(Airport_Id)
 from Airport;
 
 
@@ -411,7 +419,7 @@ create function get_total_seats_purchased (email VARCHAR(50))
 returns double precision deterministic
 begin
 return COALESCE((select SUM(Num_Seats)
-from Customer left join Book on Customer.Email = Book.Customer and not Was_Cancelled
+from Customer left join Book on Customer.Email = Book.Customer
 where Customer.Email = email), 0);
 end //
 delimiter ;
@@ -426,7 +434,7 @@ create or replace view view_customers (
     total_seats_purchased
 ) as
 select CONCAT(First_Name, " ", Last_Name),
-COALESCE(AVG(Score), 0), Location,
+AVG(Score), Location,
 Owners.Email is not NULL,
 get_total_seats_purchased(Customer.Email)
 from Customer natural join Accounts left join Owners on Customer.Email = Owners.Email
@@ -438,7 +446,7 @@ group by Customer.Email;
 drop function if exists get_num_properties_owned;
 delimiter //
 create function get_num_properties_owned (email VARCHAR(50))
-returns double precision deterministic
+returns double deterministic
 begin
 return COALESCE((select COUNT(*) from Property
 where Property.Owner_Email = email), 0);
@@ -448,11 +456,11 @@ delimiter ;
 drop function if exists get_avg_property_rating;
 delimiter //
 create function get_avg_property_rating (email VARCHAR(50))
-returns double precision deterministic
+returns double deterministic
 begin
-return COALESCE((select AVG(Score)
+return (select AVG(Score)
 from Property natural join Review
-where Property.Owner_Email = email), 0);
+where Property.Owner_Email = email);
 end //
 delimiter ;
 
@@ -465,7 +473,7 @@ create or replace view view_owners (
     avg_property_rating
 ) as
 select CONCAT(First_Name, " ", Last_Name),
-COALESCE(AVG(Score), 0),
+AVG(Score),
 get_num_properties_owned(Email),
 get_avg_property_rating(Email)
 from Owners natural join Accounts
