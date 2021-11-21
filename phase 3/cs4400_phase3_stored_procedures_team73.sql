@@ -9,6 +9,42 @@
 -- Please follow all instructions for Phase III as listed on Canvas.
 -- Fill in the team number and names and GT usernames for all members above.
 
+-- Helper methods
+drop function if exists account_exists;
+delimiter //
+create function account_exists (i_email VARCHAR(50), i_first_name VARCHAR(100), i_last_name VARCHAR(100), i_password VARCHAR(50))
+returns boolean deterministic
+begin
+return if((select (i_email, i_first_name, i_last_name, i_password) in (select Email, First_Name, Last_Name, Pass from Accounts)), true, false);
+end //
+delimiter ;
+
+drop function if exists client_exists;
+delimiter //
+create function client_exists (i_email VARCHAR(50), i_phone_number Char(12))
+returns boolean deterministic
+begin
+return (select (i_email, i_phone_number) in (select Email, Phone_Number from Clients));
+end //
+delimiter ;
+
+drop function if exists account_with_email_exists;
+delimiter //
+create function account_with_email_exists (i_email VARCHAR(50))
+returns boolean deterministic
+begin
+return (select i_email in (select Email from Clients));
+end //
+delimiter ;
+
+drop function if exists client_with_phone_number_exists;
+delimiter //
+create function client_with_phone_number_exists (i_phone_number Char(12))
+returns boolean deterministic
+begin
+return (select i_phone_number in (select Phone_Number from Clients));
+end //
+delimiter ;
 
 -- ID: 1a
 -- Name: register_customer
@@ -26,7 +62,31 @@ create procedure register_customer (
     in i_location varchar(50)
 ) 
 sp_main: begin
--- TODO: Implement your solution here
+-- credit card number must be unique in system
+if i_cc_number in (select CcNumber from Customer)
+then leave sp_main; end if;
+
+-- Handle case when customer to be added exists as an account and client 
+if account_exists(i_email, i_first_name, i_last_name, i_password)
+and client_exists(i_email, i_phone_number)
+and i_email not in (select Email from Customer) then
+insert into Customer (Email, CcNumber, Cvv, Exp_Date, Location)
+values (i_email, i_cc_number, i_cvv, i_exp_date, i_location);
+leave sp_main; end if;
+
+-- -- email and phone number must be unique in system
+if account_with_email_exists(i_email)
+or client_with_phone_number_exists(i_phone_number)
+then leave sp_main; end if;
+
+insert into Accounts (Email, First_Name, Last_Name, Pass)
+values (i_email, i_first_name, i_last_name, i_password);
+
+insert into Clients (Email, Phone_Number)
+values (i_email, i_phone_number);
+
+insert into Customer (Email, CcNumber, Cvv, Exp_Date, Location)
+values (i_email, i_cc_number, i_cvv, i_exp_date, i_location);
 
 end //
 delimiter ;
@@ -44,7 +104,25 @@ create procedure register_owner (
     in i_phone_number char(12)
 ) 
 sp_main: begin
--- TODO: Implement your solution here
+-- Handle case when customer to be added exists as an account and client
+if account_exists(i_email, i_first_name, i_last_name, i_password)
+and client_exists(i_email, i_phone_number)
+and i_email not in (select Email from Owners) then
+insert into Owners (Email) values (i_email);
+leave sp_main; end if;
+
+-- email and phone number must be unique in system
+if account_with_email_exists(i_email)
+or client_with_phone_number_exists(i_phone_number)
+then leave sp_main; end if;
+
+insert into Accounts (Email, First_Name, Last_Name, Pass)
+values (i_email, i_first_name, i_last_name, i_password);
+
+insert into Clients (Email, Phone_Number)
+values (i_email, i_phone_number);
+
+insert into Owners (Email) values (i_email);
 
 end //
 delimiter ;
