@@ -136,7 +136,15 @@ create procedure remove_owner (
     in i_owner_email varchar(50)
 )
 sp_main: begin
--- TODO: Implement your solution here
+if i_owner_email in (select Owner_Email from Property)
+then leave sp_main; end if;
+
+delete from Owners where Email = i_owner_email;
+
+if i_owner_email not in (select Email from Customer) then
+delete from Clients where Email = i_owner_email;
+delete from Accounts where Email = i_owner_email;
+end if;
 
 end //
 delimiter ;
