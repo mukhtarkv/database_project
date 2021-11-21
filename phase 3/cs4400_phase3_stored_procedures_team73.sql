@@ -137,6 +137,33 @@ end //
 delimiter ;
 
 
+-- Helper methods
+drop function if exists get_total_booked_seats;
+delimiter //
+create function get_total_booked_seats (flight_num CHAR(5), airline_name VARCHAR(50))
+returns integer deterministic
+begin
+return coalesce((select SUM(Num_Seats)
+from Book natural join Flight
+where Flight.Flight_Num = flight_num
+and Flight.Airline_Name = airline_name
+and not Was_Cancelled), 0);
+end //
+delimiter ;
+
+drop function if exists get_total_spent_on_flight;
+delimiter //
+create function get_total_spent_on_flight (flight_num CHAR(5), airline_name VARCHAR(50))
+returns double precision deterministic
+begin
+return coalesce((select SUM(Num_Seats * Cost *
+(case Was_Cancelled when true then 0.2 else 1.0 end))
+from Book natural join Flight
+where Flight.Flight_Num = flight_num
+and Flight.Airline_Name = airline_name), 0.0);
+end //
+delimiter ;
+
 -- ID: 3c
 -- Name: view_flight
 create or replace view view_flight (
@@ -148,8 +175,10 @@ create or replace view view_flight (
     num_empty_seats,
     total_spent
 ) as
--- TODO: replace this select query with your solution
-select 'col1', 'col2', 'col3', 'col4', 'col5', 'col6', 'col7' from flight;
+select Flight_Num, Flight_Date, Airline_Name, To_Airport, Cost,
+Capacity - get_total_booked_seats(Flight_Num, Airline_Name),
+get_total_spent_on_flight(Flight_Num, Airline_Name)
+from Flight;
 
 
 -- ID: 4a
