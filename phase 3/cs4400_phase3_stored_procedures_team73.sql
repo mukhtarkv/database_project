@@ -37,6 +37,15 @@ return (select i_email in (select Email from Clients));
 end //
 delimiter ;
 
+drop function if exists customer_with_email_exists;
+delimiter //
+create function customer_with_email_exists (i_email VARCHAR(50))
+returns boolean deterministic
+begin
+return (select i_email in (select Email from Customer));
+end //
+delimiter ;
+
 drop function if exists client_with_phone_number_exists;
 delimiter //
 create function client_with_phone_number_exists (i_phone_number Char(12))
@@ -69,7 +78,7 @@ then leave sp_main; end if;
 -- Handle case when customer to be added exists as an account and client 
 if account_exists(i_email, i_first_name, i_last_name, i_password)
 and client_exists(i_email, i_phone_number)
-and i_email not in (select Email from Customer) then
+and not customer_with_email_exists(i_email) then
 insert into Customer (Email, CcNumber, Cvv, Exp_Date, Location)
 values (i_email, i_cc_number, i_cvv, i_exp_date, i_location);
 leave sp_main; end if;
@@ -166,9 +175,9 @@ return (select (i_flight_num, i_airline_name) in (select Flight_Num, Airline_Nam
 end //
 delimiter ;
 
-drop function if exists date_time_passed;
+drop function if exists date_passed;
 delimiter //
-create function date_time_passed (i_flight_date date, i_current_date date)
+create function date_passed (i_flight_date date, i_current_date date)
 returns boolean deterministic
 begin
 return DATEDIFF(i_current_date, i_flight_date) > 0;
@@ -194,7 +203,7 @@ create procedure schedule_flight (
 sp_main: begin
 if flight_exists(i_flight_num, i_airline_name)
 or i_from_airport = i_to_airport
-or date_time_passed(i_flight_date, i_current_date)
+or date_passed(i_flight_date, i_current_date)
 then leave sp_main; end if;
 
 INSERT INTO Flight (Flight_Num, Airline_Name, From_Airport, To_Airport, Departure_Time, Arrival_Time, Flight_Date, Cost, Capacity)
@@ -202,9 +211,19 @@ VALUES (i_flight_num, i_airline_name, i_from_airport, i_to_airport, i_departure_
 end //
 delimiter ;
 
-select date_time_passed('2021-10-18', '2021-11-04');
+-- select date_time_passed('2021-10-18', '2021-11-04');
 call schedule_flight('3', 'Southwest Airlines', 'MIA', 'DFW', '130000', '160000', '2021-10-18', 350, 125, '2021-11-04');
 
+
+-- Helper methods
+drop function if exists get_flight_date;
+delimiter //
+create function get_flight_date (i_flight_num char(5), i_airline_name varchar(50))
+returns date deterministic
+begin
+return (select Flight_Date from Flight where Flight_Num = i_flight_num and Airline_Name = i_airline_name);
+end //
+delimiter ;
 
 -- ID: 2b
 -- Name: remove_flight
@@ -217,7 +236,7 @@ create procedure remove_flight (
 ) 
 sp_main: begin
 if not flight_exists(i_flight_num, i_airline_name)
-or date_time_passed((select Flight_Date from Flight where Flight_Num = i_flight_num and Airline_Name = i_airline_name), i_current_date)
+or date_passed(get_flight_date(i_flight_num, i_airline_name), i_current_date)
 then leave sp_main; end if;
 
 delete from Book where Flight_Num = i_flight_num and Airline_Name = i_airline_name;
@@ -226,8 +245,39 @@ delete from Flight where Flight_Num = i_flight_num and Airline_Name = i_airline_
 end //
 delimiter ;
 
-call remove_flight('2', 'Southwest Airlines', '2021-08-01');
+-- call remove_flight('2', 'Southwest Airlines', '2021-08-01');
 
+
+-- Helper methods
+drop function if exists get_num_empty_seats;
+delimiter //
+create function get_num_empty_seats (i_flight_num char(5), i_airline_name varchar(50))
+returns integer deterministic
+begin
+return (select num_empty_seats from view_flight where flight_id = i_flight_num and airline = i_airline_name);
+end //
+delimiter ;
+
+drop function if exists customer_booked_flight_with_cancel_status;
+delimiter //
+create function customer_booked_flight_with_cancel_status (i_customer_email varchar(50), i_flight_num char(5), i_airline_name varchar(50), i_cancel_status boolean)
+returns boolean deterministic
+begin
+return (select (i_customer_email, i_flight_num, i_airline_name) in (select Customer, Flight_Num, Airline_Name from Book where Was_Cancelled = i_cancel_status));
+end //
+delimiter ;
+
+drop function if exists get_num_flights_on_date_with_cancel_status;
+delimiter //
+create function get_num_flights_on_date_with_cancel_status (i_flight_date date, i_customer_email varchar(50), i_cancel_status boolean)
+returns integer deterministic
+begin
+return (select COUNT(*) from Book
+where Customer = i_customer_email
+and get_flight_date(Flight_Num, Airline_Name) = i_flight_date
+and Was_Cancelled = i_cancel_status);
+end //
+delimiter ;
 
 -- ID: 3a
 -- Name: book_flight
@@ -241,10 +291,28 @@ create procedure book_flight (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not customer_with_email_exists(i_customer_email)
+or not flight_exists(i_flight_num, i_airline_name)
+or i_num_seats > get_num_empty_seats(i_flight_num, i_airline_name)
+or date_passed(get_flight_date(i_flight_num, i_airline_name), i_current_date)
+or customer_booked_flight_with_cancel_status(i_customer_email, i_flight_num, i_airline_name, true)
+then leave sp_main; end if;
+
+if customer_booked_flight_with_cancel_status(i_customer_email, i_flight_num, i_airline_name, false) then
+update Book set Num_Seats = Num_Seats + i_num_seats
+where Customer = i_customer_email and Flight_Num = i_flight_num and Airline_Name = i_airline_name;
+leave sp_main; end if;
+
+if get_num_flights_on_date_with_cancel_status(get_flight_date(i_flight_num, i_airline_name), i_customer_email, false) = 1
+then leave sp_main; end if;
+
+insert into Book (Customer, Flight_Num, Airline_Name, Num_Seats, Was_Cancelled)
+values (i_customer_email, i_flight_num, i_airline_name, i_num_seats, false);
 
 end //
 delimiter ;
+
+call book_flight('scooper3@gmail.com', '2', 'Southwest Airlines', 122, '2021-10-01');
 
 -- ID: 3b
 -- Name: cancel_flight_booking
@@ -257,11 +325,20 @@ create procedure cancel_flight_booking (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not customer_with_email_exists(i_customer_email)
+or not flight_exists(i_flight_num, i_airline_name)
+or date_passed(get_flight_date(i_flight_num, i_airline_name), i_current_date)
+then leave sp_main; end if;
+
+if customer_booked_flight_with_cancel_status(i_customer_email, i_flight_num, i_airline_name, false) then
+update Book set Was_Cancelled = 1
+where Customer = i_customer_email and Flight_Num = i_flight_num and Airline_Name = i_airline_name;
+leave sp_main; end if;
 
 end //
 delimiter ;
 
+call cancel_flight_booking('bshelton@gmail.com', '4', 'United Airlines', '2021-10-01');
 
 -- Helper methods
 drop function if exists get_total_booked_seats;
