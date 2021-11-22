@@ -177,10 +177,10 @@ delimiter ;
 
 drop function if exists date_passed;
 delimiter //
-create function date_passed (i_flight_date date, i_current_date date)
+create function date_passed (i_past_date date, i_current_date date)
 returns boolean deterministic
 begin
-return DATEDIFF(i_current_date, i_flight_date) > 0;
+return DATEDIFF(i_current_date, i_past_date) > 0;
 end //
 delimiter ;
 
@@ -338,7 +338,7 @@ leave sp_main; end if;
 end //
 delimiter ;
 
-call cancel_flight_booking('bshelton@gmail.com', '4', 'United Airlines', '2021-10-01');
+-- call cancel_flight_booking('bshelton@gmail.com', '4', 'United Airlines', '2021-10-01');
 
 -- Helper methods
 drop function if exists get_total_booked_seats;
@@ -360,6 +360,7 @@ create function get_total_spent_on_flight (flight_num CHAR(5), airline_name VARC
 returns double deterministic
 begin
 declare total_spent double;
+set total_spent = 0.0;
 
 select SUM(Num_Seats * Cost *
 (case Was_Cancelled when true then 0.2 else 1.0 end))
@@ -389,6 +390,25 @@ get_total_spent_on_flight(Flight_Num, Airline_Name)
 from Flight;
 
 
+-- Helper methods
+drop function if exists address_exists;
+delimiter //
+create function address_exists (i_street varchar(50), i_city varchar(50), i_state char(2), i_zip char(5))
+returns boolean deterministic
+begin
+return (select (i_street, i_city, i_state, i_zip) in (select Street, City, State, Zip from Property));
+end //
+delimiter ;
+
+drop function if exists property_is_owned_by;
+delimiter //
+create function property_is_owned_by (i_property_name varchar(50), i_owner_email varchar(50))
+returns boolean deterministic
+begin
+return (select (i_property_name, i_owner_email) in (select Property_Name, Owner_Email from Property));
+end //
+delimiter ;
+
 -- ID: 4a
 -- Name: add_property
 drop procedure if exists add_property;
@@ -407,10 +427,21 @@ create procedure add_property (
     in i_dist_to_airport int
 ) 
 sp_main: begin
--- TODO: Implement your solution here
+if address_exists(i_street, i_city, i_state, i_state)
+or property_is_owned_by(i_property_name, i_owner_email)
+then leave sp_main; end if;
+
+insert into Property (Property_Name, Owner_Email, Descr, Capacity, Cost, Street, City, State, Zip)
+VALUES (i_property_name, i_owner_email, i_description, i_capacity, i_cost, i_street, i_city, i_state, i_zip);
+
+if i_nearest_airport_id in (select Airport_Id from Airport) and i_dist_to_airport is not NULL then
+INSERT INTO Is_Close_To (Property_Name, Owner_Email, Airport, Distance)
+VALUES (i_property_name, i_owner_email, i_nearest_airport_id, i_dist_to_airport); end if;
   
 end //
 delimiter ;
+
+call add_property('Dunder Mifflin', 'mscott22@gmail.com', 'A great paper company for an overnight stay!', 15, 50.00, 'Slough Avenue', 'Scranton', 'PA', 18503, 'LGA', 135);
 
 
 -- ID: 4b
@@ -423,10 +454,19 @@ create procedure remove_property (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if (select COUNT(*) from Reserve
+where Property_Name = i_property_name and Owner_Email = i_owner_email
+and DATEDIFF(i_current_date, Start_Date) >= 0
+and DATEDIFF(End_Date, i_current_date) >= 0) > 0
+then leave sp_main; end if;
+
+delete from Reserve where Property_Name = i_property_name and Owner_Email = i_owner_email;
+delete from Property where Property_Name = i_property_name and Owner_Email = i_owner_email;
     
 end //
 delimiter ;
+
+call remove_property('LA Lakers Property', 'lebron6@gmail.com', '2021-10-22');
 
 
 -- ID: 5a
