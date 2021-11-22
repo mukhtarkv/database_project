@@ -586,10 +586,19 @@ create procedure customer_review_property (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not property_is_reserved_by(i_property_name, i_owner_email, i_customer_email)
+or not DATEDIFF(i_current_date, get_reservation_date(i_property_name, i_owner_email, i_customer_email, true)) >= 0
+or (select (i_property_name, i_owner_email, i_customer_email) in (select Property_Name, Owner_Email, Customer from Review))
+then leave sp_main; end if;
+
+if property_is_reserved_by_with_cancel_status(i_property_name, i_owner_email, i_customer_email, false) then
+INSERT INTO Review (Property_Name, Owner_Email, Customer, Content, Score)
+VALUES (i_property_name, i_owner_email, i_customer_email, i_content, i_score); end if;
     
 end //
 delimiter ;
+
+-- call customer_review_property('Beautiful Beach Property', 'msmith5@gmail.com', 'cbing10@gmail.com', 'This property was amazing!', 5, '2021-12-19');
 
 
 -- ID: 5d
