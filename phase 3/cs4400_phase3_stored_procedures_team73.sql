@@ -638,11 +638,24 @@ sp_main: begin
         rating_score int,
         review varchar(500)
     ) as
-    -- TODO: replace this select query with your solution
-    select 'col1', 'col2', 'col3', 'col4', 'col5', 'col6', 'col7', 'col8' from reserve;
+    select Property.Property_Name as property_name,
+    Reserve.Start_Date as start_date,
+    Reserve.End_Date as end_date,
+    Clients.Email as customer_email,
+    Clients.Phone_Number as customer_phone_num,
+    SUM(Reserve.Num_Guests * Property.Cost *
+		(case Reserve.Was_Cancelled when true then 0.2 else 1.0 end)) as total_booking_cost,
+    Review.Score as rating_score,
+    Review.Content as review
+    from ((Reserve natural join Property) join Clients on Reserve.Customer = Clients.Email)
+    left join Review on Reserve.Property_Name = Review.Property_Name and Reserve.Owner_Email = Review.Owner_Email and Reserve.Customer = Review.Customer
+    where Property.Property_Name = i_property_name and Property.Owner_Email = i_owner_email
+    group by Clients.Email, Clients.Phone_Number, Property.Property_Name, Reserve.Start_Date, Reserve.End_Date, Review.Score, Review.Content;
 
 end //
 delimiter ;
+
+-- call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
 
 
 -- ID: 6a
