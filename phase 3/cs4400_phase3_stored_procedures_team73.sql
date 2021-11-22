@@ -167,11 +167,11 @@ end if;
 end //
 delimiter ;
 
-call register_customer('falcon@gmail.com', 'Samuel', 'Wilson', 'password22', '777-469-5347', '9121 2762 7467 5215', '809', '2022-05-11', 'Baton Rouge');
-call register_owner('falcon@gmail.com', 'Samuel', 'Wilson', 'password22', '777-469-5347');
-select * from Owners natural join Customer
-where Owners.Email not in (select Owner_Email from Property);
-call remove_owner("falcon@gmail.com");
+-- call register_customer('falcon@gmail.com', 'Samuel', 'Wilson', 'password22', '777-469-5347', '9121 2762 7467 5215', '809', '2022-05-11', 'Baton Rouge');
+-- call register_owner('falcon@gmail.com', 'Samuel', 'Wilson', 'password22', '777-469-5347');
+-- select * from Owners natural join Customer
+-- where Owners.Email not in (select Owner_Email from Property);
+-- call remove_owner("falcon@gmail.com");
 
 
 -- Helper methods
@@ -221,7 +221,7 @@ end //
 delimiter ;
 
 -- select date_time_passed('2021-10-18', '2021-11-04');
-call schedule_flight('3', 'Southwest Airlines', 'MIA', 'DFW', '130000', '160000', '2021-10-18', 350, 125, '2021-11-04');
+-- call schedule_flight('3', 'Southwest Airlines', 'MIA', 'DFW', '130000', '160000', '2021-10-18', 350, 125, '2021-11-04');
 
 
 -- Helper methods
@@ -323,6 +323,7 @@ delimiter ;
 
 -- call book_flight('scooper3@gmail.com', '2', 'Southwest Airlines', 122, '2021-10-01');
 
+
 -- ID: 3b
 -- Name: cancel_flight_booking
 drop procedure if exists cancel_flight_booking;
@@ -348,6 +349,7 @@ end //
 delimiter ;
 
 -- call cancel_flight_booking('bshelton@gmail.com', '4', 'United Airlines', '2021-10-01');
+
 
 -- Helper methods
 drop function if exists get_total_booked_seats;
@@ -450,7 +452,7 @@ VALUES (i_property_name, i_owner_email, i_nearest_airport_id, i_dist_to_airport)
 end //
 delimiter ;
 
-call add_property('Dunder Mifflin', 'mscott22@gmail.com', 'A great paper company for an overnight stay!', 15, 50.00, 'Slough Avenue', 'Scranton', 'PA', 18503, 'LGA', 135);
+-- call add_property('Dunder Mifflin', 'mscott22@gmail.com', 'A great paper company for an overnight stay!', 15, 50.00, 'Slough Avenue', 'Scranton', 'PA', 18503, 'LGA', 135);
 
 
 -- ID: 4b
@@ -475,7 +477,7 @@ delete from Property where Property_Name = i_property_name and Owner_Email = i_o
 end //
 delimiter ;
 
-call remove_property('LA Lakers Property', 'lebron6@gmail.com', '2021-10-22');
+-- call remove_property('LA Lakers Property', 'lebron6@gmail.com', '2021-10-22');
 
 
 -- Helper methods
@@ -701,7 +703,7 @@ VALUES (i_customer_email, i_owner_email, i_score);
 end //
 delimiter ;
 
-call customer_rates_owner('cbing10@gmail.com', 'msmith5@gmail.com', 3, '2021-10-18');
+-- call customer_rates_owner('cbing10@gmail.com', 'msmith5@gmail.com', 3, '2021-10-18');
 
 
 -- ID: 6b
@@ -727,7 +729,7 @@ VALUES (i_owner_email, i_customer_email, i_score);
 end //
 delimiter ;
 
-call owner_rates_customer('msmith5@gmail.com', 'cbing10@gmail.com', 4, '2021-10-18');
+-- call owner_rates_customer('msmith5@gmail.com', 'cbing10@gmail.com', 4, '2021-10-18');
 
 
 -- Helper methods
@@ -860,7 +862,11 @@ create procedure process_date (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
-    
+update Customer set Location = IFNULL((select State
+from Book natural join Flight join Airport on Airport_Id = To_Airport
+where Email = Customer and Was_Cancelled = false and Flight_Date = i_current_date
+limit 1), Location);
 end //
 delimiter ;
+
+-- call process_date('2021-10-19');
