@@ -469,6 +469,27 @@ delimiter ;
 call remove_property('LA Lakers Property', 'lebron6@gmail.com', '2021-10-22');
 
 
+-- Helper methods
+drop function if exists property_is_reserved_by;
+delimiter //
+create function property_is_reserved_by (i_property_name varchar(50), i_owner_email varchar(50), i_customer_email varchar(50))
+returns boolean deterministic
+begin
+return (select (i_property_name, i_owner_email, i_customer_email) in (select Property_Name, Owner_Email, Customer from Reserve));
+end //
+delimiter ;
+
+drop function if exists get_available_space_in_property;
+delimiter //
+create function get_available_space_in_property (i_property_name varchar(50), i_owner_email varchar(50), i_start_date date, i_end_date date)
+returns integer deterministic
+begin
+return coalesce((select Capacity from Property where Property_Name = i_property_name and Owner_Email = i_owner_email), 0) -
+coalesce((select SUM(Num_Guests) from Reserve where Property_Name = i_property_name and Owner_Email = i_owner_email
+and not Was_Cancelled and Start_Date = i_start_date and End_Date = i_end_date), 0);
+end //
+delimiter ;
+
 -- ID: 5a
 -- Name: reserve_property
 drop procedure if exists reserve_property;
@@ -483,10 +504,30 @@ create procedure reserve_property (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not property_is_owned_by(i_property_name, i_owner_email)
+or property_is_reserved_by(i_property_name, i_owner_email, i_customer_email)
+or DATEDIFF(i_current_date, i_start_date) >= 0
+then leave sp_main; end if;
+
+if (select COUNT(*) from Reserve
+where Customer = i_customer_email
+and ((DATEDIFF(i_start_date, Start_Date) >= 0
+and DATEDIFF(End_Date, i_start_date) >= 0)
+or (DATEDIFF(i_end_date, Start_Date) >= 0
+and DATEDIFF(End_Date, i_end_date) >= 0)) > 0)
+then leave sp_main; end if;
+
+if get_available_space_in_property(i_property_name, i_owner_email, i_start_date, i_end_date) < i_num_guests
+then leave sp_main; end if;
+
+INSERT INTO Reserve (Property_Name, Owner_Email, Customer, Start_Date, End_Date, Num_Guests, Was_Cancelled)
+VALUES (i_property_name, i_owner_email, i_customer_email, i_start_date, i_end_date, i_num_guests, false);
 
 end //
 delimiter ;
+
+-- select get_available_space_in_property('Beautiful San Jose Mansion', 'arthurread@gmail.com', '2021-10-19', '2021-10-22');
+-- call reserve_property('Beautiful San Jose Mansion', 'arthurread@gmail.com', 'johnthomas@gmail.com', '2021-10-19', '2021-10-22', 1, '2021-10-01');
 
 
 -- ID: 5b
