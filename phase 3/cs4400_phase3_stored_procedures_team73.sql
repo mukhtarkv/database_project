@@ -479,6 +479,15 @@ return (select (i_property_name, i_owner_email, i_customer_email) in (select Pro
 end //
 delimiter ;
 
+drop function if exists property_is_reserved_by_with_cancel_status;
+delimiter //
+create function property_is_reserved_by_with_cancel_status (i_property_name varchar(50), i_owner_email varchar(50), i_customer_email varchar(50), cancel_status boolean)
+returns boolean deterministic
+begin
+return (select (i_property_name, i_owner_email, i_customer_email) in (select Property_Name, Owner_Email, Customer from Reserve where Was_Cancelled = cancel_status));
+end //
+delimiter ;
+
 drop function if exists get_available_space_in_property;
 delimiter //
 create function get_available_space_in_property (i_property_name varchar(50), i_owner_email varchar(50), i_start_date date, i_end_date date)
@@ -530,6 +539,16 @@ delimiter ;
 -- call reserve_property('Beautiful San Jose Mansion', 'arthurread@gmail.com', 'johnthomas@gmail.com', '2021-10-19', '2021-10-22', 1, '2021-10-01');
 
 
+-- Helper methods
+drop function if exists get_reservation_date;
+delimiter //
+create function get_reservation_date (i_property_name varchar(50), i_owner_email varchar(50), i_customer_email varchar(50), is_start_date boolean)
+returns date deterministic
+begin
+return (select (case when is_start_date then Start_Date else End_Date end) from Reserve where Property_Name = i_property_name and Owner_Email = i_owner_email and Customer = i_customer_email);
+end //
+delimiter ;
+
 -- ID: 5b
 -- Name: cancel_property_reservation
 drop procedure if exists cancel_property_reservation;
@@ -541,10 +560,17 @@ create procedure cancel_property_reservation (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not property_is_reserved_by(i_property_name, i_owner_email, i_customer_email)
+or DATEDIFF(i_current_date, get_reservation_date(i_property_name, i_owner_email, i_customer_email, true)) >= 0
+then leave sp_main; end if;
+
+if property_is_reserved_by_with_cancel_status(i_property_name, i_owner_email, i_customer_email, false) then
+update Reserve set Was_Cancelled = 1 where Property_Name = i_property_name and Owner_Email = i_owner_email and Customer = i_customer_email; end if;
 
 end //
 delimiter ;
+
+-- call cancel_property_reservation('Beautiful Beach Property', 'msmith5@gmail.com', 'cbing10@gmail.com', '2021-10-01');
 
 
 -- ID: 5c
