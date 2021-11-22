@@ -101,6 +101,15 @@ end //
 delimiter ;
 
 
+drop function if exists owner_with_email_exists;
+delimiter //
+create function owner_with_email_exists (i_email VARCHAR(50))
+returns boolean deterministic
+begin
+return (select i_email in (select Email from Owners));
+end //
+delimiter ;
+
 -- ID: 1b
 -- Name: register_owner
 drop procedure if exists register_owner;
@@ -116,7 +125,7 @@ sp_main: begin
 -- Handle case when customer to be added exists as an account and client
 if account_exists(i_email, i_first_name, i_last_name, i_password)
 and client_exists(i_email, i_phone_number)
-and i_email not in (select Email from Owners) then
+and not owner_with_email_exists(i_email) then
 insert into Owners (Email) values (i_email);
 leave sp_main; end if;
 
@@ -150,7 +159,7 @@ then leave sp_main; end if;
 
 delete from Owners where Email = i_owner_email;
 
-if i_owner_email not in (select Email from Customer) then
+if not customer_with_email_exists(i_owner_email) then
 delete from Clients where Email = i_owner_email;
 delete from Accounts where Email = i_owner_email;
 end if;
@@ -669,10 +678,20 @@ create procedure customer_rates_owner (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not customer_with_email_exists(i_customer_email)
+or not owner_with_email_exists(i_owner_email)
+or not (select COUNT(*) from Reserve where Customer = i_customer_email and Owner_Email = i_owner_email
+and Was_Cancelled = false and DATEDIFF(i_current_date, Start_Date) >= 0) > 0
+or (select (i_customer_email, i_owner_email) in (select Customer, Owner_Email from Customers_Rate_Owners))
+then leave sp_main; end if;
+
+INSERT INTO Customers_Rate_Owners (Customer, Owner_Email, Score)
+VALUES (i_customer_email, i_owner_email, i_score);
 
 end //
 delimiter ;
+
+call customer_rates_owner('cbing10@gmail.com', 'msmith5@gmail.com', 3, '2021-10-18');
 
 
 -- ID: 6b
