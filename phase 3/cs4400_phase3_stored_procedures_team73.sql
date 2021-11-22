@@ -321,7 +321,7 @@ values (i_customer_email, i_flight_num, i_airline_name, i_num_seats, false);
 end //
 delimiter ;
 
-call book_flight('scooper3@gmail.com', '2', 'Southwest Airlines', 122, '2021-10-01');
+-- call book_flight('scooper3@gmail.com', '2', 'Southwest Airlines', 122, '2021-10-01');
 
 -- ID: 3b
 -- Name: cancel_flight_booking
@@ -667,6 +667,17 @@ delimiter ;
 -- call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
 
 
+-- Helper methods
+drop function if exists customer_stayed_at_owners_property;
+delimiter //
+create function customer_stayed_at_owners_property (i_customer_email varchar(50), i_owner_email varchar(50), i_current_date date)
+returns boolean deterministic
+begin
+return (select COUNT(*) from Reserve where Customer = i_customer_email and Owner_Email = i_owner_email
+and Was_Cancelled = false and DATEDIFF(i_current_date, Start_Date) >= 0) > 0;
+end //
+delimiter ;
+
 -- ID: 6a
 -- Name: customer_rates_owner
 drop procedure if exists customer_rates_owner;
@@ -680,8 +691,7 @@ create procedure customer_rates_owner (
 sp_main: begin
 if not customer_with_email_exists(i_customer_email)
 or not owner_with_email_exists(i_owner_email)
-or not (select COUNT(*) from Reserve where Customer = i_customer_email and Owner_Email = i_owner_email
-and Was_Cancelled = false and DATEDIFF(i_current_date, Start_Date) >= 0) > 0
+or not customer_stayed_at_owners_property(i_customer_email, i_owner_email, i_current_date)
 or (select (i_customer_email, i_owner_email) in (select Customer, Owner_Email from Customers_Rate_Owners))
 then leave sp_main; end if;
 
@@ -705,10 +715,20 @@ create procedure owner_rates_customer (
     in i_current_date date
 )
 sp_main: begin
--- TODO: Implement your solution here
+if not customer_with_email_exists(i_customer_email)
+or not owner_with_email_exists(i_owner_email)
+or not customer_stayed_at_owners_property(i_customer_email, i_owner_email, i_current_date)
+or (select (i_customer_email, i_owner_email) in (select Customer, Owner_Email from Owners_Rate_Customers))
+then leave sp_main; end if;
+
+INSERT INTO Owners_Rate_Customers (Owner_Email, Customer, Score)
+VALUES (i_owner_email, i_customer_email, i_score);
 
 end //
 delimiter ;
+
+call owner_rates_customer('msmith5@gmail.com', 'cbing10@gmail.com', 4, '2021-10-18');
+
 
 -- Helper methods
 drop function if exists get_total_flights;
