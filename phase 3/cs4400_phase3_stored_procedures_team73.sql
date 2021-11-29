@@ -365,25 +365,6 @@ and not Was_Cancelled), 0);
 end //
 delimiter ;
 
-drop function if exists get_total_spent_on_flight;
-delimiter //
-create function get_total_spent_on_flight (flight_num CHAR(5), airline_name VARCHAR(50))
-returns double deterministic
-begin
-declare total_spent double;
-set total_spent = 0.0;
-
-select SUM(Num_Seats * Cost *
-(case Was_Cancelled when true then 0.2 else 1.0 end))
-into total_spent
-from Book natural join Flight
-where Flight.Flight_Num = flight_num
-and Flight.Airline_Name = airline_name;
-
-return coalesce(total_spent, 0.0);
-end //
-delimiter ;
-
 -- ID: 3c
 -- Name: view_flight
 create or replace view view_flight (
@@ -397,8 +378,12 @@ create or replace view view_flight (
 ) as
 select Flight_Num, Flight_Date, Airline_Name, To_Airport, Cost,
 Capacity - get_total_booked_seats(Flight_Num, Airline_Name),
-get_total_spent_on_flight(Flight_Num, Airline_Name)
-from Flight;
+coalesce((select SUM(Num_Seats * Cost *
+(case Was_Cancelled when true then 0.2 else 1.0 end))
+from Book natural join Flight
+where Flight.Flight_Num = baseFlight.Flight_Num
+and Flight.Airline_Name = baseFlight.Airline_Name), 0.0)
+from Flight as baseFlight;
 
 
 -- Helper methods
@@ -744,17 +729,6 @@ where Airport.Airport_Id = airport_id);
 end //
 delimiter ;
 
-drop function if exists get_average_departing_cost;
-delimiter //
-create function get_average_departing_cost (airport_id CHAR(3))
-returns double deterministic
-begin
-return (select AVG(Cost)
-from Airport join Flight on Airport_Id = From_Airport
-where Airport.Airport_Id = airport_id);
-end //
-delimiter ;
-
 -- ID: 7a
 -- Name: view_airports
 create or replace view view_airports (
@@ -768,8 +742,10 @@ create or replace view view_airports (
 select Airport_Id, Airport_Name, Time_Zone,
 get_total_flights(Airport_Id, TRUE),
 get_total_flights(Airport_Id, FALSE),
-get_average_departing_cost(Airport_Id)
-from Airport;
+(select AVG(Cost)
+from Airport join Flight on Airport_Id = From_Airport
+where Airport.Airport_Id = baseAirport.Airport_Id)
+from Airport as baseAirport;
 
 
 -- ID: 7b
@@ -826,17 +802,6 @@ where Property.Owner_Email = email), 0);
 end //
 delimiter ;
 
-drop function if exists get_avg_property_rating;
-delimiter //
-create function get_avg_property_rating (email VARCHAR(50))
-returns double deterministic
-begin
-return (select AVG(Score)
-from Property natural join Review
-where Property.Owner_Email = email);
-end //
-delimiter ;
-
 -- ID: 8b
 -- Name: view_owners
 create or replace view view_owners (
@@ -848,7 +813,9 @@ create or replace view view_owners (
 select CONCAT(First_Name, " ", Last_Name),
 AVG(Score),
 get_num_properties_owned(Email),
-get_avg_property_rating(Email)
+(select AVG(Score)
+from Property natural join Review
+where Property.Owner_Email = Owners.Email)
 from Owners natural join Accounts
 left join Owners_Rate_Customers on Email = Owner_Email
 group by Email;
