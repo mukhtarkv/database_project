@@ -639,8 +639,8 @@ sp_main: begin
     Reserve.End_Date as end_date,
     Clients.Email as customer_email,
     Clients.Phone_Number as customer_phone_num,
-    coalesce(SUM((DATEDIFF(Reserve.End_Date, Reserve.Start_Date) + 1) * Property.Cost *
-		(case Reserve.Was_Cancelled when true then 0.2 else 1.0 end)), 0.0) as total_booking_cost,
+    SUM((DATEDIFF(Reserve.End_Date, Reserve.Start_Date) + 1) * Property.Cost *
+		(case Reserve.Was_Cancelled when true then 0.2 else 1.0 end)) as total_booking_cost,
     Review.Score as rating_score,
     Review.Content as review
     from ((Reserve natural join Property) join Clients on Reserve.Customer = Clients.Email)
