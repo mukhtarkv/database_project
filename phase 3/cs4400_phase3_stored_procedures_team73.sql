@@ -651,7 +651,7 @@ sp_main: begin
 end //
 delimiter ;
 
-call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
+-- call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
 
 
 -- Helper methods
