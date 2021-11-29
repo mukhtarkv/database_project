@@ -33,7 +33,7 @@ delimiter //
 create function account_with_email_exists (i_email VARCHAR(50))
 returns boolean deterministic
 begin
-return (select i_email in (select Email from Clients));
+return (select i_email in (select Email from Accounts));
 end //
 delimiter ;
 
