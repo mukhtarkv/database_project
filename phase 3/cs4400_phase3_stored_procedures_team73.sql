@@ -639,8 +639,8 @@ sp_main: begin
     Reserve.End_Date as end_date,
     Clients.Email as customer_email,
     Clients.Phone_Number as customer_phone_num,
-    SUM(Reserve.Num_Guests * Property.Cost *
-		(case Reserve.Was_Cancelled when true then 0.2 else 1.0 end)) as total_booking_cost,
+    coalesce(SUM((DATEDIFF(Reserve.End_Date, Reserve.Start_Date) + 1) * Property.Cost *
+		(case Reserve.Was_Cancelled when true then 0.2 else 1.0 end)), 0.0) as total_booking_cost,
     Review.Score as rating_score,
     Review.Content as review
     from ((Reserve natural join Property) join Clients on Reserve.Customer = Clients.Email)
@@ -651,7 +651,7 @@ sp_main: begin
 end //
 delimiter ;
 
--- call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
+call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
 
 
 -- Helper methods
