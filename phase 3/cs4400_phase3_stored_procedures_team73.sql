@@ -324,7 +324,7 @@ create procedure cancel_flight_booking (
 sp_main: begin
 if not customer_with_email_exists(i_customer_email)
 or not flight_exists(i_flight_num, i_airline_name)
-or date_passed(get_flight_date(i_flight_num, i_airline_name), i_current_date)
+or not date_passed(i_current_date, get_flight_date(i_flight_num, i_airline_name))
 then leave sp_main; end if;
 
 if customer_booked_flight_with_cancel_status(i_customer_email, i_flight_num, i_airline_name, false) then
