@@ -236,7 +236,7 @@ create procedure remove_flight (
 ) 
 sp_main: begin
 if not flight_exists(i_flight_num, i_airline_name)
-or date_passed(get_flight_date(i_flight_num, i_airline_name), i_current_date)
+or not date_passed(i_current_date, get_flight_date(i_flight_num, i_airline_name))
 then leave sp_main; end if;
 
 delete from Book where Flight_Num = i_flight_num and Airline_Name = i_airline_name;
