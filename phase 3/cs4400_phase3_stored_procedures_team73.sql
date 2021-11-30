@@ -167,12 +167,6 @@ end if;
 end //
 delimiter ;
 
--- call register_customer('falcon@gmail.com', 'Samuel', 'Wilson', 'password22', '777-469-5347', '9121 2762 7467 5215', '809', '2022-05-11', 'Baton Rouge');
--- call register_owner('falcon@gmail.com', 'Samuel', 'Wilson', 'password22', '777-469-5347');
--- select * from Owners natural join Customer
--- where Owners.Email not in (select Owner_Email from Property);
--- call remove_owner("falcon@gmail.com");
-
 
 -- Helper methods
 drop function if exists flight_exists;
@@ -220,9 +214,6 @@ VALUES (i_flight_num, i_airline_name, i_from_airport, i_to_airport, i_departure_
 end //
 delimiter ;
 
--- select date_time_passed('2021-10-18', '2021-11-04');
--- call schedule_flight('3', 'Southwest Airlines', 'MIA', 'DFW', '130000', '160000', '2021-10-18', 350, 125, '2021-11-04');
-
 
 -- Helper methods
 drop function if exists get_flight_date;
@@ -253,8 +244,6 @@ delete from Flight where Flight_Num = i_flight_num and Airline_Name = i_airline_
 
 end //
 delimiter ;
-
--- call remove_flight('2', 'Southwest Airlines', '2021-08-01');
 
 
 -- Helper methods
@@ -321,8 +310,6 @@ values (i_customer_email, i_flight_num, i_airline_name, i_num_seats, false);
 end //
 delimiter ;
 
--- call book_flight('scooper3@gmail.com', '2', 'Southwest Airlines', 122, '2021-10-01');
-
 
 -- ID: 3b
 -- Name: cancel_flight_booking
@@ -347,8 +334,6 @@ leave sp_main; end if;
 
 end //
 delimiter ;
-
--- call cancel_flight_booking('bshelton@gmail.com', '4', 'United Airlines', '2021-10-01');
 
 
 -- Helper methods
@@ -437,8 +422,6 @@ VALUES (i_property_name, i_owner_email, i_nearest_airport_id, i_dist_to_airport)
 end //
 delimiter ;
 
--- call add_property('Dunder Mifflin', 'mscott22@gmail.com', 'A great paper company for an overnight stay!', 15, 50.00, 'Slough Avenue', 'Scranton', 'PA', 18503, 'LGA', 135);
-
 
 -- ID: 4b
 -- Name: remove_property
@@ -461,8 +444,6 @@ delete from Property where Property_Name = i_property_name and Owner_Email = i_o
     
 end //
 delimiter ;
-
--- call remove_property('LA Lakers Property', 'lebron6@gmail.com', '2021-10-22');
 
 
 -- Helper methods
@@ -531,9 +512,6 @@ VALUES (i_property_name, i_owner_email, i_customer_email, i_start_date, i_end_da
 end //
 delimiter ;
 
--- select get_available_space_in_property('Beautiful San Jose Mansion', 'arthurread@gmail.com', '2021-10-19', '2021-10-22');
--- call reserve_property('Beautiful San Jose Mansion', 'arthurread@gmail.com', 'johnthomas@gmail.com', '2021-10-19', '2021-10-22', 1, '2021-10-01');
-
 
 -- Helper methods
 drop function if exists get_reservation_date;
@@ -566,8 +544,6 @@ update Reserve set Was_Cancelled = 1 where Property_Name = i_property_name and O
 end //
 delimiter ;
 
--- call cancel_property_reservation('Beautiful Beach Property', 'msmith5@gmail.com', 'cbing10@gmail.com', '2021-10-01');
-
 
 -- ID: 5c
 -- Name: customer_review_property
@@ -593,8 +569,6 @@ VALUES (i_property_name, i_owner_email, i_customer_email, i_content, i_score); e
     
 end //
 delimiter ;
-
--- call customer_review_property('Beautiful Beach Property', 'msmith5@gmail.com', 'cbing10@gmail.com', 'This property was amazing!', 5, '2021-12-19');
 
 
 -- ID: 5d
@@ -651,8 +625,6 @@ sp_main: begin
 end //
 delimiter ;
 
--- call view_individual_property_reservations('New York City Property', 'cbing10@gmail.com');
-
 
 -- Helper methods
 drop function if exists customer_stayed_at_owners_property;
@@ -688,8 +660,6 @@ VALUES (i_customer_email, i_owner_email, i_score);
 end //
 delimiter ;
 
--- call customer_rates_owner('cbing10@gmail.com', 'msmith5@gmail.com', 3, '2021-10-18');
-
 
 -- ID: 6b
 -- Name: owner_rates_customer
@@ -713,8 +683,6 @@ VALUES (i_owner_email, i_customer_email, i_score);
 
 end //
 delimiter ;
-
--- call owner_rates_customer('msmith5@gmail.com', 'cbing10@gmail.com', 4, '2021-10-18');
 
 
 -- Helper methods
@@ -835,5 +803,3 @@ where Email = Customer and Was_Cancelled = false and Flight_Date = i_current_dat
 limit 1), Location);
 end //
 delimiter ;
-
--- call process_date('2021-10-19');
